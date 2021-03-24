@@ -2,16 +2,16 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, func, text
 from flask import Flask, jsonify, render_template
+from config import password, username
 
 #############################################
 #Setting up database
 #########################################
 
 
-user_name = 'postgres'
-password = ''
-rds_connection_string = f'postgres://postgres:@localhost:5432/Quotes'
-engine = create_engine({rds_connection_string})
+rds_connection_string = f'postgresql://{username}:{password}@localhost:5432/Quotes'
+engine = create_engine(rds_connection_string)
+
 
 # reflect an existing database into a new model
 #Base = automap_base()
@@ -42,7 +42,7 @@ def quotes_for_author(author_name):
     for row in quotes_result_set:
         this_quote = {}
         this_quote['text'] = row.text
-        this_quote['quote_tag'] = tags_for_the_quote(row.id) #change to tag
+        this_quote['quote_tag'] = tags_for_the_quote(row.id)
         result.append(this_quote)
     return result
 
@@ -56,7 +56,7 @@ def quotes_for_tag(tag):
     print(f'getting quotes for {tag}')
 
     query = text('''select id, text
-            from quotes q inner join quote_tag t on q.id=t.quote_id
+            from quotes q inner join quote_tag t on q.id=t.id
             where t.tag = :tag ''')
     quotes_result_set = engine.execute(query, {'tag': tag})
     for row in quotes_result_set:
@@ -68,7 +68,7 @@ def quotes_for_tag(tag):
 
 #################################################################
 
-@app.route("/home")
+@app.route("/")
 def welcome():
     """List all available api routes."""
     return render_template("index.html")
